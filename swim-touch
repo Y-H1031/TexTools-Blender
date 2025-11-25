@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ラズパイ タッチタイマー</title>
+
+  <style>
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(135deg, #007aff, #4a90e2);
+      color: white;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+    }
+
+    button {
+      background: white;
+      color: #007aff;
+      border: none;
+      border-radius: 2rem;
+      font-size: 1.4rem;
+      padding: 1rem 2rem;
+      margin: 1rem;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #e0e0e0;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 2rem;
+      font-size: 1.4rem;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>ラズパイ タッチタイマー</h1>
+  <p>Wi-Fi「RaspberryPi_AP」に接続してから操作してください。</p>
+
+  <button id="startBtn">スタート</button>
+  <button id="checkBtn">結果を取得</button>
+
+  <div id="result">待機中...</div>
+
+  <script>
+    // ラズパイ(APモード)の固定IP
+    const PI_IP = "http://192.168.4.1:5000";
+
+    const resultText = document.getElementById("result");
+    const startBtn = document.getElementById("startBtn");
+    const checkBtn = document.getElementById("checkBtn");
+
+    // --- スタートボタン ---
+    startBtn.addEventListener("click", async () => {
+      resultText.textContent = "送信中...";
+      try {
+        const res = await fetch(`${PI_IP}/start`);
+        const data = await res.json();
+
+        if (data.status === "countdown started") {
+          resultText.textContent = "⏳ カウントダウン中...";
+        } else {
+          resultText.textContent = "⚠️ エラー";
+        }
+      } catch (err) {
+        resultText.textContent = "❌ 接続できません。Wi-Fiを確認してください。";
+      }
+    });
+
+    // --- 結果取得ボタン ---
+    checkBtn.addEventListener("click", async () => {
+      try {
+        const res = await fetch(`${PI_IP}/result`);
+        const data = await res.json();
+
+        if (data.status === "done") {
+          resultText.textContent = `🏁 タイム: ${data.time} 秒`;
+        } else if (data.status === "measuring") {
+          resultText.textContent = "⏱ 計測中...";
+        } else {
+          resultText.textContent = "📭 データなし";
+        }
+      } catch (err) {
+        resultText.textContent = "❌ 接続エラー";
+      }
+    });
+  </script>
+</body>
+</html>
